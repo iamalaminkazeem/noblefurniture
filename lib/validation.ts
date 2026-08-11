@@ -11,7 +11,7 @@ export const quoteSchema = z.object({
   description: z.string().min(5).max(2000),
   preferredDate: z.string().optional(),
   recaptchaToken: z.string().optional(),
-  website: z.string().max(0).optional(), // honeypot — real users never fill this
+  website: z.string().optional(), // honeypot — checked in application code, not schema-enforced
 });
 
 export const contactSchema = z.object({
@@ -20,7 +20,7 @@ export const contactSchema = z.object({
   phone: z.string().min(7).max(20),
   message: z.string().min(5).max(2000),
   recaptchaToken: z.string().optional(),
-  website: z.string().max(0).optional(),
+  website: z.string().optional(),
 });
 
 export const consultationSchema = z.object({
@@ -30,7 +30,7 @@ export const consultationSchema = z.object({
   preferredDate: z.string().min(1),
   notes: z.string().max(2000).optional(),
   recaptchaToken: z.string().optional(),
-  website: z.string().max(0).optional(),
+  website: z.string().optional(),
 });
 
 export const checkoutSchema = z.object({
