@@ -7,7 +7,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { InvoicePDF } from "@/lib/invoice-pdf";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Not authorized" }, { status: 403 }); }
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 403 }); }
   const { id } = await params;
 
   const invoice = await prisma.invoice.findUnique({ where: { id }, include: { items: true } });
