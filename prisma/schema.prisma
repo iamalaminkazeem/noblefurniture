@@ -32,6 +32,12 @@ enum ConsultationStatus {
   CANCELLED
 }
 
+enum InvoiceStatus {
+  UNPAID
+  PAID
+  CANCELLED
+}
+
 model Category {
   id       String    @id @default(cuid())
   name     String    @unique
@@ -133,4 +139,41 @@ model NewsletterSubscriber {
   id        String   @id @default(cuid())
   email     String   @unique
   createdAt DateTime @default(now())
+}
+
+model Invoice {
+  id               String        @id @default(cuid())
+  invoiceNumber    String        @unique
+  customerName     String
+  customerEmail    String?
+  customerPhone    String?
+  customerAddress  String?
+  issueDate        DateTime      @default(now())
+  dueDate          DateTime?
+  status           InvoiceStatus @default(UNPAID)
+  subtotalKobo     Int
+  discountKobo     Int           @default(0)
+  deliveryKobo     Int           @default(0)
+  installationKobo Int           @default(0)
+  totalKobo        Int
+  notes            String?
+  items            InvoiceItem[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model InvoiceItem {
+  id            String  @id @default(cuid())
+  invoiceId     String
+  invoice       Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description   String
+  quantity      Int
+  unitPriceKobo Int
+  amountKobo    Int
+}
+
+// Backs safe, non-duplicate invoice numbering (NFG-2026-0001, etc.)
+model InvoiceCounter {
+  id    String @id // the year, e.g. "2026"
+  count Int    @default(0)
 }
