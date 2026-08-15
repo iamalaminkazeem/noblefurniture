@@ -56,7 +56,7 @@ type InvoiceData = {
   items: { description: string; quantity: number; unitPriceKobo: number; amountKobo: number }[];
 };
 
-export function InvoicePDF({ invoice, logoSrc }: { invoice: InvoiceData; logoSrc?: Buffer | string }) {
+export function InvoicePDF({ invoice, logoSrc }: { invoice: InvoiceData; logoSrc?: string }) {
   const issueDate = new Date(invoice.issueDate).toLocaleDateString("en-NG", { day: "2-digit", month: "2-digit", year: "numeric" });
   const dueDate = invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString("en-NG", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
   const depositAmount = Math.round(invoice.totalKobo * 0.8);
@@ -67,7 +67,7 @@ export function InvoicePDF({ invoice, logoSrc }: { invoice: InvoiceData; logoSrc
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <View style={{ flexDirection: "row" }}>
-            {logoSrc && <Image src={logoSrc as any} style={styles.logo} />}
+            {logoSrc && <Image src={logoSrc} style={styles.logo} />}
             <View style={styles.companyBlock}>
               <Text style={styles.companyName}>{BUSINESS.legalName}</Text>
               <Text style={styles.tagline}>CRAFTING LUXURY. DEFINING SPACES.</Text>

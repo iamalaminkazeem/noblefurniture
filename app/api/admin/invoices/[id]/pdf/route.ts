@@ -7,15 +7,19 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { InvoicePDF } from "@/lib/invoice-pdf";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Unauthorized" }, { status: 403 }); }
+  try { await requireAdmin(); } catch { return NextResponse.json({ error: "Not authorized" }, { status: 403 }); }
   const { id } = await params;
 
   const invoice = await prisma.invoice.findUnique({ where: { id }, include: { items: true } });
   if (!invoice) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  let logoSrc: Buffer | undefined;
+  // Embed the logo as a base64 data URI — a plain string, same well-tested
+  // path @react-pdf/renderer uses for any normal image URL. No network
+  // fetch, no raw-buffer object shape.
+  let logoSrc: string | undefined;
   try {
-    logoSrc = fs.readFileSync(path.join(process.cwd(), "public", "logo.png"));
+    const fileBuffer = fs.readFileSync(path.join(process.cwd(), "public", "logo.png"));
+    logoSrc = `data:image/png;base64,${fileBuffer.toString("base64")}`;
   } catch {
     console.warn("public/logo.png not found — generating invoice without logo.");
   }
