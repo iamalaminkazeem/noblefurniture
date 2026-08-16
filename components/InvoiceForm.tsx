@@ -31,13 +31,26 @@ export function InvoiceForm() {
     setLines((prev) => prev.filter((_, idx) => idx !== i));
   }
 
-  const subtotal = lines.reduce((sum, l) => sum + (parseFloat(l.quantity) || 0) * (parseFloat(l.unitPrice) || 0), 0);
+  const validLines = lines.filter((l) => l.description.trim() && l.unitPrice.trim());
+  const subtotal = validLines.reduce((sum, l) => sum + (parseFloat(l.quantity) || 0) * (parseFloat(l.unitPrice) || 0), 0);
   const total = subtotal - (parseFloat(discount) || 0) + (parseFloat(delivery) || 0) + (parseFloat(installation) || 0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSaving(true);
     setError("");
+
+    // Catch the empty-items problem here, before it ever reaches the server —
+    // gives an immediate, specific reason instead of a generic failure later.
+    if (!customerName.trim()) {
+      setError("Customer name is required.");
+      return;
+    }
+    if (validLines.length === 0) {
+      setError("Add at least one item with both a description AND a unit price filled in — empty lines are skipped automatically.");
+      return;
+    }
+
+    setSaving(true);
 
     const payload = {
       customerName, customerEmail, customerPhone, customerAddress,
@@ -46,18 +59,17 @@ export function InvoiceForm() {
       deliveryKobo: Math.round((parseFloat(delivery) || 0) * 100),
       installationKobo: Math.round((parseFloat(installation) || 0) * 100),
       notes,
-      items: lines
-        .filter((l) => l.description && l.unitPrice)
-        .map((l) => ({ description: l.description, quantity: parseInt(l.quantity) || 1, unitPriceKobo: Math.round(parseFloat(l.unitPrice) * 100) })),
+      items: validLines.map((l) => ({ description: l.description, quantity: parseInt(l.quantity) || 1, unitPriceKobo: Math.round(parseFloat(l.unitPrice) * 100) })),
     };
 
     try {
       const res = await fetch("/api/admin/invoices", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      if (!res.ok) throw new Error("Failed");
-      const invoice = await res.json();
-      router.push(`/admin/invoices/${invoice.id}`);
-    } catch {
-      setError("Something went wrong creating this invoice.");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create invoice");
+      router.push(`/admin/invoices/${data.id}`);
+    } catch (err: any) {
+      // Show the real server-side reason instead of a generic message.
+      setError(err.message || "Something went wrong creating this invoice.");
     } finally {
       setSaving(false);
     }
@@ -75,6 +87,7 @@ export function InvoiceForm() {
 
       <div>
         <div className="text-xs text-[#1E1E1E]/60 uppercase tracking-wide mb-2">Items</div>
+        <p className="text-xs text-[#1E1E1E]/40 mb-3">Both description and unit price are required for a line to count — empty lines are ignored.</p>
         <div className="space-y-3">
           {lines.map((line, i) => (
             <div key={i} className="flex gap-2 items-start">
@@ -99,7 +112,7 @@ export function InvoiceForm() {
         <span>Total</span><span className="font-medium">₦{total.toLocaleString("en-NG")}</span>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-600 bg-red-50 p-3">{error}</p>}
       <Btn variant="primary" type="submit" disabled={saving}>{saving ? "Creating…" : "Create Invoice"}</Btn>
     </form>
   );
