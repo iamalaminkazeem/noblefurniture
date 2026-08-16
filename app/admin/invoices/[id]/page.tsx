@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Download, Check } from "lucide-react";
+import { Check } from "lucide-react";
+import { InvoiceDownloadButton } from "@/components/InvoiceDownloadButton";
 
 const formatNaira = (kobo: number) => `₦${(kobo / 100).toLocaleString("en-NG")}`;
 
@@ -19,7 +20,7 @@ export default function ViewInvoice() {
 
   async function togglePaid() {
     const newStatus = invoice.status === "PAID" ? "UNPAID" : "PAID";
-    setInvoice((prev: any) => ({ ...prev, status: newStatus })); // optimistic
+    setInvoice((prev: any) => ({ ...prev, status: newStatus }));
     await fetch(`/api/admin/invoices/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus }) });
   }
 
@@ -31,7 +32,7 @@ export default function ViewInvoice() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="serif text-3xl font-light">{invoice.invoiceNumber}</h1>
         <div className="flex gap-3">
-          <a href={`/api/admin/invoices/${id}/pdf`} className="border border-[#0B3D2E] text-[#0B3D2E] px-4 py-2.5 text-sm flex items-center gap-2"><Download size={16} /> PDF</a>
+          <InvoiceDownloadButton invoice={invoice} />
           <button onClick={togglePaid} className={`px-4 py-2.5 text-sm flex items-center gap-2 ${invoice.status === "PAID" ? "bg-[#F8F8F8] text-[#1E1E1E]" : "bg-[#0B3D2E] text-white"}`}>
             <Check size={16} /> Mark as {invoice.status === "PAID" ? "Unpaid" : "Paid"}
           </button>

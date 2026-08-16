@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Download, Eye } from "lucide-react";
+import { Plus, Trash2, Eye } from "lucide-react";
 
 type Invoice = { id: string; invoiceNumber: string; customerName: string; totalKobo: number; status: string; createdAt: string };
 
@@ -32,8 +32,9 @@ export default function AdminInvoices() {
                 <div className="font-medium">{inv.invoiceNumber} — {inv.customerName}</div>
                 <div className="text-xs text-[#1E1E1E]/50">{formatNaira(inv.totalKobo)} · {inv.status} · {new Date(inv.createdAt).toLocaleDateString("en-NG")}</div>
               </div>
-              <Link href={`/admin/invoices/${inv.id}`} className="p-2 text-[#0B3D2E] hover:bg-[#F8F8F8]" aria-label="View"><Eye size={16} /></Link>
-              <a href={`/api/admin/invoices/${inv.id}/pdf`} className="p-2 text-[#0B3D2E] hover:bg-[#F8F8F8]" aria-label="Download PDF"><Download size={16} /></a>
+              <Link href={`/admin/invoices/${inv.id}`} className="p-2 text-[#0B3D2E] hover:bg-[#F8F8F8] flex items-center gap-1.5 text-xs" aria-label="View">
+                <Eye size={16} /> View & Download
+              </Link>
             </div>
           ))}
         </div>
