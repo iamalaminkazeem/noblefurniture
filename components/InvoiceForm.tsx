@@ -39,8 +39,6 @@ export function InvoiceForm() {
     e.preventDefault();
     setError("");
 
-    // Catch the empty-items problem here, before it ever reaches the server —
-    // gives an immediate, specific reason instead of a generic failure later.
     if (!customerName.trim()) {
       setError("Customer name is required.");
       return;
@@ -68,7 +66,6 @@ export function InvoiceForm() {
       if (!res.ok) throw new Error(data.error || "Failed to create invoice");
       router.push(`/admin/invoices/${data.id}`);
     } catch (err: any) {
-      // Show the real server-side reason instead of a generic message.
       setError(err.message || "Something went wrong creating this invoice.");
     } finally {
       setSaving(false);
@@ -76,7 +73,7 @@ export function InvoiceForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-3xl space-y-6 bg-white p-8 border border-[#0B3D2E]/10">
+    <form onSubmit={handleSubmit} className="max-w-3xl space-y-6 bg-white p-4 sm:p-8 border border-[#0B3D2E]/10">
       <div className="grid sm:grid-cols-2 gap-4">
         <Field label="Customer name" value={customerName} onChange={(e: any) => setCustomerName(e.target.value)} required />
         <Field label="Phone" value={customerPhone} onChange={(e: any) => setCustomerPhone(e.target.value)} />
@@ -88,13 +85,37 @@ export function InvoiceForm() {
       <div>
         <div className="text-xs text-[#1E1E1E]/60 uppercase tracking-wide mb-2">Items</div>
         <p className="text-xs text-[#1E1E1E]/40 mb-3">Both description and unit price are required for a line to count — empty lines are ignored.</p>
-        <div className="space-y-3">
+        <div className="space-y-4 sm:space-y-3">
           {lines.map((line, i) => (
-            <div key={i} className="flex gap-2 items-start">
-              <input placeholder="Description" value={line.description} onChange={(e) => updateLine(i, "description", e.target.value)} className="flex-1 border border-[#0B3D2E]/15 px-3 py-2 text-sm" />
-              <input placeholder="Qty" type="number" min="1" value={line.quantity} onChange={(e) => updateLine(i, "quantity", e.target.value)} className="w-20 border border-[#0B3D2E]/15 px-3 py-2 text-sm" />
-              <input placeholder="Unit price (₦)" type="number" value={line.unitPrice} onChange={(e) => updateLine(i, "unitPrice", e.target.value)} className="w-32 border border-[#0B3D2E]/15 px-3 py-2 text-sm" />
-              <button type="button" onClick={() => removeLine(i)} className="p-2 text-red-500"><Trash2 size={16} /></button>
+            <div key={i} className="border border-[#0B3D2E]/10 p-3 sm:border-0 sm:p-0">
+              <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-start">
+                <input
+                  placeholder="Description"
+                  value={line.description}
+                  onChange={(e) => updateLine(i, "description", e.target.value)}
+                  className="w-full sm:flex-1 border border-[#0B3D2E]/15 px-3 py-2 text-sm"
+                />
+                <div className="flex gap-2">
+                  <input
+                    placeholder="Qty"
+                    type="number"
+                    min="1"
+                    value={line.quantity}
+                    onChange={(e) => updateLine(i, "quantity", e.target.value)}
+                    className="w-20 sm:w-20 border border-[#0B3D2E]/15 px-3 py-2 text-sm"
+                  />
+                  <input
+                    placeholder="Unit price (₦)"
+                    type="number"
+                    value={line.unitPrice}
+                    onChange={(e) => updateLine(i, "unitPrice", e.target.value)}
+                    className="flex-1 sm:w-32 border border-[#0B3D2E]/15 px-3 py-2 text-sm min-w-0"
+                  />
+                  <button type="button" onClick={() => removeLine(i)} className="p-2 text-red-500 flex-shrink-0" aria-label="Remove item">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>
