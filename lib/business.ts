@@ -11,7 +11,7 @@ export const BUSINESS = {
   hours: "Mon – Sat, 9:00 AM – 6:00 PM",
   // Placeholders — fill these in once you have the real details. Nothing here is invented.
   cacNumber: "RC 9762160",
-  bankName: "[Add your bank name]",
+  bankName: "OPAY [PAYCOM NIGERIA LIMITED]",
   bankAccountName: "Noble Furniture Gallery Limited",
   bankAccountNumber: "[Add your account number]",
 };
