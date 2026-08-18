@@ -151,11 +151,11 @@ model Invoice {
   issueDate        DateTime      @default(now())
   dueDate          DateTime?
   status           InvoiceStatus @default(UNPAID)
-  subtotalKobo     Int
-  discountKobo     Int           @default(0)
-  deliveryKobo     Int           @default(0)
-  installationKobo Int           @default(0)
-  totalKobo        Int
+  subtotalKobo     BigInt
+  discountKobo     BigInt        @default(0)
+  deliveryKobo     BigInt        @default(0)
+  installationKobo BigInt        @default(0)
+  totalKobo        BigInt
   notes            String?
   items            InvoiceItem[]
   createdAt        DateTime      @default(now())
@@ -168,8 +168,8 @@ model InvoiceItem {
   invoice       Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   description   String
   quantity      Int
-  unitPriceKobo Int
-  amountKobo    Int
+  unitPriceKobo BigInt
+  amountKobo    BigInt
 }
 
 // Backs safe, non-duplicate invoice numbering (NFG-2026-0001, etc.)

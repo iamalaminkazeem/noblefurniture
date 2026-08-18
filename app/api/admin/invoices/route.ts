@@ -12,10 +12,28 @@ async function generateInvoiceNumber(): Promise<string> {
   return `NFG-${year}-${String(counter.count).padStart(4, "0")}`;
 }
 
+// Converts BigInt fields back to plain numbers before sending JSON —
+// JS's JSON.stringify can't handle raw bigint values at all.
+function serializeInvoice(inv: any) {
+  return {
+    ...inv,
+    subtotalKobo: Number(inv.subtotalKobo),
+    discountKobo: Number(inv.discountKobo),
+    deliveryKobo: Number(inv.deliveryKobo),
+    installationKobo: Number(inv.installationKobo),
+    totalKobo: Number(inv.totalKobo),
+    items: inv.items?.map((i: any) => ({
+      ...i,
+      unitPriceKobo: Number(i.unitPriceKobo),
+      amountKobo: Number(i.amountKobo),
+    })),
+  };
+}
+
 export async function GET() {
   try { await requireAdmin(); } catch { return NextResponse.json({ error: "Not authorized" }, { status: 403 }); }
   const invoices = await prisma.invoice.findMany({ orderBy: { createdAt: "desc" } });
-  return NextResponse.json(invoices);
+  return NextResponse.json(invoices.map(serializeInvoice));
 }
 
 export async function POST(req: NextRequest) {
@@ -28,6 +46,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Customer name and at least one item are required" }, { status: 400 });
   }
 
+  // Plain-number arithmetic first — JS numbers safely handle integers up to
+  // ~9 quadrillion, vastly more than any realistic invoice — then convert
+  // to BigInt only at the very end, right before it goes to Prisma/Postgres.
   const subtotalKobo = items.reduce((sum: number, i: any) => sum + i.quantity * i.unitPriceKobo, 0);
   const totalKobo = subtotalKobo - (discountKobo || 0) + (deliveryKobo || 0) + (installationKobo || 0);
   const invoiceNumber = await generateInvoiceNumber();
@@ -40,22 +61,22 @@ export async function POST(req: NextRequest) {
       customerPhone,
       customerAddress,
       dueDate: dueDate ? new Date(dueDate) : undefined,
-      subtotalKobo,
-      discountKobo: discountKobo || 0,
-      deliveryKobo: deliveryKobo || 0,
-      installationKobo: installationKobo || 0,
-      totalKobo,
+      subtotalKobo: BigInt(subtotalKobo),
+      discountKobo: BigInt(discountKobo || 0),
+      deliveryKobo: BigInt(deliveryKobo || 0),
+      installationKobo: BigInt(installationKobo || 0),
+      totalKobo: BigInt(totalKobo),
       notes,
       items: {
         create: items.map((i: any) => ({
           description: i.description,
           quantity: i.quantity,
-          unitPriceKobo: i.unitPriceKobo,
-          amountKobo: i.quantity * i.unitPriceKobo,
+          unitPriceKobo: BigInt(i.unitPriceKobo),
+          amountKobo: BigInt(i.quantity * i.unitPriceKobo),
         })),
       },
     },
   });
 
-  return NextResponse.json(invoice, { status: 201 });
+  return NextResponse.json(serializeInvoice(invoice), { status: 201 });
 }

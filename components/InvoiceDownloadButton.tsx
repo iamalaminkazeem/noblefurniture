@@ -1,8 +1,22 @@
 "use client";
 import React, { useState } from "react";
-import { pdf } from "@react-pdf/renderer";
 import { Download } from "lucide-react";
-import { InvoicePDF } from "@/lib/invoice-pdf";
+import { generateInvoicePDF } from "@/lib/generate-invoice-pdf";
+
+async function loadLogoAsDataUrl(): Promise<string | undefined> {
+  try {
+    const res = await fetch("/logo.png");
+    const blob = await res.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return undefined; // no logo is better than a broken PDF
+  }
+}
 
 export function InvoiceDownloadButton({ invoice }: { invoice: any }) {
   const [generating, setGenerating] = useState(false);
@@ -10,19 +24,9 @@ export function InvoiceDownloadButton({ invoice }: { invoice: any }) {
   async function handleDownload() {
     setGenerating(true);
     try {
-      // Runs entirely in the browser — no server route, no Vercel bundling
-      // issue to fight. The logo is just a normal relative URL the browser
-      // resolves itself, same as any <img> tag would.
-      const logoSrc = `${window.location.origin}/logo.png`;
-      const blob = await pdf(InvoicePDF({ invoice, logoSrc })).toBlob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${invoice.invoiceNumber}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const logoDataUrl = await loadLogoAsDataUrl();
+      const doc = await generateInvoicePDF(invoice, logoDataUrl);
+      doc.save(`${invoice.invoiceNumber}.pdf`);
     } catch (err) {
       console.error("PDF generation failed:", err);
       alert("Could not generate the PDF. Please try again.");
@@ -40,4 +44,4 @@ export function InvoiceDownloadButton({ invoice }: { invoice: any }) {
       <Download size={16} /> {generating ? "Generating…" : "Download PDF"}
     </button>
   );
-}
+} 
